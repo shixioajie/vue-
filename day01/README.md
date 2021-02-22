@@ -1,3 +1,8 @@
+
+# # install dependencies
+npm install 
+
+
 数据驱动
 
 # Vue 与模板
