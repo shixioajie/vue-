@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="../node_modules/vue/dist/vue.min.js">
+    </script>
+</head>
+
+<body>
+    <!-- 1 模板 -->
+    <div id="root">
+        <p>{{name}}</p>
+        <p>{{message}}</p>
+    </div>
+
+   
+
+    <script>
+        console.log(root);
+        // 2.创建实例
+        const app = new Vue({
+            el: "#root",
+            data: {
+                name: "test",
+                message: "hello",
+            }
+        });
+
+        // 3 是挂载：这种用法挂载在 vue.js 中帮我们实现了。
+
+        console.log(root);
+    </script>
+</body>
+
+</html>

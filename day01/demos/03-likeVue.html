@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <!-- 1 模板 -->
+    <div id="root">
+        <p>{{name}}</p>
+        <p>{{message}}</p>
+        <div>
+            <div>
+                <p>{{name}}-{{message}}</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tempNode = document.querySelector("#root");
+        let rkuohao = /\{\{(.+?)\}\}/g;
+        let data = {
+            name: "李乐乐",
+            message: "快乐星期",
+        }
+
+        // 将数据替换值模板中
+        // 可以使用递归
+        // 在真正的 Vue 源码中是 DOM -> 字符串模板 -> VNode(虚拟dom) -> 真正的DOM 
+        function compiler(template, data) {
+            let childNodes = template.childNodes;
+            for (let i = 0; i < childNodes.length; i++) {
+                let type = childNodes[i].nodeType;// 1是元素 3是文本节点
+
+                if (type == 3) { // 文本节点，可以判断里面是否有{{}}标记插值。
+                    let txt = childNodes[i].nodeValue;
+
+                    // 判断有没有双花括号
+                    txt = txt.replace(rkuohao, function (_, g) {
+                        let key = g.trim();
+                        let value = data[key];
+                        return value;
+                    })
+                    childNodes[i].nodeValue = txt;
+
+                } else if (type == 1) {// 元素，考虑它有没有子元素，如果有子元素判断是否需要插值。
+                    compiler(childNodes[i], data);
+                }
+            }
+        }
+
+        // 利用dom元素自带的 cloneNode 克隆 dom 。
+        let generateNode = tempNode.cloneNode(true);
+        console.log(tempNode);
+        compiler(generateNode, data);
+        console.log(generateNode);
+        // 我们此时是没有生成新的 template，所以这里看到的是直接在页面中就跟新好的数据，因为 dom 是引用类型。
+        // 这样做模板就没有了。
+
+        // 使用dom自元素替换，replceChild，还保留了之前的模板。
+        root.parentNode.replaceChild(generateNode, root);
+
+        // 上面的思路有很大的问题：
+        // 1. Vue 使用的是虚拟DOM。
+        // 2. 只考虑了 单属性（{{name}}），而 Vue 中可以大量的使用层级（{{child.name...}}）
+        // 3. 代码没有整合
+    </script>
+</body>
+
+</html>
