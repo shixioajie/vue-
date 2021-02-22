@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+
+    <script>
+
+
+        function getValueByPath(object, path) {
+            let paths = path.split('.')// 分割为数组 [xxx,yyy,zzz]
+            let temp = object;
+            for (let i = 0; i < paths.length; i++) {
+                temp = temp[paths[i]];
+            }
+            return temp;
+        }
+
+        let o = {
+            a: {
+                b: {
+                    c: {
+                        d: {
+                            e: "找到了"
+                        }
+                    }
+                }
+            }
+        }
+
+        console.log(getValueByPath(o, 'a.b.c.d.e'));
+
+    </script>
+</body>
+
+</html>
