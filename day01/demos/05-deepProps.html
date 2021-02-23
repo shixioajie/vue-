@@ -13,6 +13,7 @@
     <!-- 写模板 -->
     <div id="root">
         <p>{{name.firstName}}</p>
+        <p>{{list}}</p>
     </div>
 
     <script>
@@ -28,7 +29,7 @@
                     // 判断有没有双花括号
                     txt = txt.replace(rkuohao, function (_, g) {
                         let key = g.trim();
-                        let value = data[key];
+                        let value = getValueByPath(data, key);
                         return value;
                     })
                     childNodes[i].nodeValue = txt;
@@ -75,7 +76,8 @@
                 name: {
                     firstName: "李开心",
                     lastName: "哈哈"
-                }
+                },
+                list: [1, 23, 4, 5]
             }
         })
 

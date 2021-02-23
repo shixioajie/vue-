@@ -12,16 +12,28 @@
 
     <!-- 写模板 -->
     <div id="root">
-        <p>{{name}}</p>
+        <p>{{name.firstName}}</p>
         <p>{{message}}</p>
         <div>
             <div>
-                <p>{{name}}-{{message}}</p>
+                <p>{{name.lastName}}-{{message}}</p>
             </div>
         </div>
     </div>
 
     <script>
+        // 函数柯里化、深度查找对象数据。
+        function createGetValueByPath(path) {
+            let paths = path.split(".");
+            return function getValueByPath(object) {
+                let temp = object;
+                for (let i = 0; i < paths.length; i++) {
+                    temp = temp[paths[i]];
+                }
+                return temp;
+            }
+        }
+        // 编辑-匹配{{}}内容替换到nodeValue。
         function compiler(template, data) {
             let childNodes = template.childNodes;
             let rkuohao = /\{\{(.+?)\}\}/g;
@@ -33,8 +45,8 @@
 
                     // 判断有没有双花括号
                     txt = txt.replace(rkuohao, function (_, g) {
-                        let key = g.trim();
-                        let value = data[key];
+                        let path = g.trim();
+                        let value = createGetValueByPath(path)(data);
                         return value;
                     })
                     childNodes[i].nodeValue = txt;
@@ -44,6 +56,7 @@
                 }
             }
         }
+        // 构造函数
         function JGVue(options) {
             // 习惯：内部的数据使用 _ 开头，只读数据使用 $ 开头
             this._data = options.data;
@@ -73,10 +86,14 @@
             this._parent.replaceChild(real, document.querySelector(this._el));
         }
 
+        
         const app = new JGVue({
             el: "#root",
             data: {
-                name: "李开心",
+                name: {
+                    firstName: "李开心",
+                    lastName: "嗯哈哈",
+                },
                 message: "hello",
             }
         })
