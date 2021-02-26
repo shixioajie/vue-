@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <script>
+
+
+        function makeMap(tags) {
+            let map = Object.create(null);
+            let keys = tags.split(',');
+            keys.forEach(key => map[key] = true);
+            return function (tagName) {
+                return Boolean(map[tagName.toLowerCase()]);
+            }
+        }
+
+        let isHTMLTag = makeMap("div,p,a,img,ul,li");// 接收到的是一个返回函数；
+
+        console.log(isHTMLTag('div'));
+    </script>
+</body>
+
+</html>

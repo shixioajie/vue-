@@ -11,7 +11,21 @@
 <body>
 
 
+    <div id="box" class="c1 c2 c3" style="border: 1px solid black;">1</div>
     <script>
+
+        // 函数柯里化
+        function createGetValueByPath(path) {
+            let paths = path.split(".");
+
+            return function getValueByPath(object) {
+                let temp = object;
+                for (let i = 0; i < paths.length; i++) {
+                    temp = temp[paths[i]];
+                }
+                return temp;
+            }
+        }
 
 
         function getValueByPath(object, path) {
@@ -35,7 +49,19 @@
             }
         }
 
-        console.log(getValueByPath(o, 'a.b.c.d.e'));
+
+        function Structure(name, trait) {
+            this.name = name;
+            this.trait = trait;
+        }
+
+        function StructureCall(selfName) {
+            Structure.call(this, '作者', 'Structure')
+            this.selfName = selfName;
+        }
+
+        const structure = new StructureCall('call');
+        console.log(structure);
 
     </script>
 </body>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <script>
+
+        // 虚拟 DOM 构造函数
+        class VNode {
+            constructor(tag, data, value, type) {
+                this.tag = tag && tag.toLowerCase();
+                this.data = data;
+                this.value = value;
+                this.type = type;
+                this.children = [];
+            }
+            appendChild(vnode) {
+                this.children.push(vnode);
+            }
+        }
+
+        // 由 HTML DOM 转换成虚拟 DOM 
+        function getVNode(node) {
+            let nodeType = node.nodeType;
+            let _vnode = null;
+
+            if (nodeType === 1) {
+                // 元素
+                let nodeName = node.nodeName;
+                let attrs = node.attributes;
+                let _attrObj = {};
+                for (let i = 0; i < attrs.length; i++) {// attrs[i] 属性节点（nodeType == 2 ）
+                    _attrObj[attrs[i].nodeName] = attrs[i].nodeValue;
+                }
+                _vnode = new VNode(nodeName, _attrObj, undefined, nodeType);
+
+                // 考虑 node 的子元素
+                let childNodes = node.childNodes;
+                for (let i = 0; i < childNodes.length; i++) {
+                    _vnode.appendChild(getVNode(childNodes[i]));
+                }
+
+            } else if (nodeType === 3) {
+                _vnode = new VNode(undefined, undefined, node.nodeValue, nodeType);
+            }
+            return _vnode;
+        }
+
+        function JGVue(options) {
+            this._data = options.data;
+            this._template = options.el;// vue 是字符串，这里是 DOM 。
+            this.mount(); // 挂载
+        }
+
+        JGVue.prototype.mount = function () {
+            // 需要提供一个 render 方法：生成虚拟DOM
+            this.render = this.createRenderFn();
+            this.mountComponent();
+        }
+
+        JGVue.prototype.mountComponent = function () {
+            // 执行 mountComponent() 函数
+            let mount = () => {
+                this.update(this.render())
+            }
+            mount.call(this);
+        }
+
+        /**
+         * 在真正得VUE 中使用了 二次提交得设计结构
+         * 1. 在页面中的 DOM 和虚拟 DOM 是一一对应的关系
+         * 2. 先有AST和数据生成VNode(新，render)
+         * 3. 将旧的 VNode 和 新的 VNode 进行比较(diff),更新(updata)。
+         * **/
+
+        // 生成render函数，目的是缓存抽象语法树（我们使用虚拟DOM来模拟）
+        JGVue.prototype.createRenderFn = function () {
+            let ast = getVNode(this._template);
+            // VUE中是将 AST + data => VNode
+            // 这里简化将 未带有数据的VNode + data => 带有数据VNnode。
+            return function render() {
+
+            }
+        }
+
+        // 将虚拟DOM渲染到页面中：diff 算法就在这里
+        JGVue.prototype.update = function () {
+
+        }
+    </script>
+</body>
+
+</html>
