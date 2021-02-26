@@ -10,6 +10,21 @@
 
 <body>
 
+    <div id="root">
+        <div class="box" inform='I am A box'>
+            <div title='box1'>
+                <div title='box1.1'>{{name}}</div>
+                <div title='box1.2'>{{age}}</div>
+                <div title='box1.3'>{{gender}}</div>
+            </div>
+            <ul>
+                <li>1</li>
+                <li>2</li>
+                <li>3</li>
+            </ul>
+        </div>
+    </div>
+
     <script>
 
         // 虚拟 DOM 构造函数
@@ -53,9 +68,44 @@
             return _vnode;
         }
 
+        let rkuohao = /\{\{(.+?)\}\}/g;
+        // 根据路径获取对象成员数据
+        function getValueByPath(object, path) {
+            let paths = path.split(',');
+            let result = object;
+            let prop;
+           
+            while (prop = paths.shift()) {
+                result = result[prop];
+            }
+            return result;
+        }
+
+        // 将未填数据的 Vnode 与 数据 data 结合，得到填写了数据的 Vnode：模拟 AST -> Vnode
+        function combine(vnode, data) {
+            let _type = vnode.type;
+            let _data = vnode.data;
+            let _value = vnode.value;
+            let _tag = vnode.tag;
+            let _children = vnode.children;
+            let _vnode = null;
+
+            if (_type === 3) { // 文本节点
+                // 对文本进行处理
+                _value = _value.replace(rkuohao, function (_, g) {
+                    return getValueByPath(data, g.trim());
+                })
+                _vnode = new VNode(_tag, _data, _value, _type);
+            } else if (_type === 1) { // 元素节点
+                _vnode = new VNode(_tag, _data, _value, _type);
+                _children.forEach(_subvnode => _vnode.appendChild(combine(_subvnode, data)));
+            }
+            return _vnode;
+        }
+
         function JGVue(options) {
             this._data = options.data;
-            this._template = options.el;// vue 是字符串，这里是 DOM 。
+            this._template = document.querySelector(options.el);// vue 是字符串，这里是 DOM 。
             this.mount(); // 挂载
         }
 
@@ -86,14 +136,26 @@
             // VUE中是将 AST + data => VNode
             // 这里简化将 未带有数据的VNode + data => 带有数据VNnode。
             return function render() {
-
+                // 将为填写数据得的Vnode 转成为 带有数据的Vnode。
+                let _tmp = combine(ast, this._data);  
+                return _tmp;
             }
         }
 
         // 将虚拟DOM渲染到页面中：diff 算法就在这里
         JGVue.prototype.update = function () {
-
+            // 简化，直接生成 html dom replaceChild 到页面中
         }
+
+        let app = new JGVue({
+            el: "#root",
+            data:{ 
+                name:"张哈哈",
+                age:"19",
+                gender:"男"
+            }
+        })
+
     </script>
 </body>
 

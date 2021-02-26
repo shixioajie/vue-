@@ -10,6 +10,9 @@ tests/**/coverage/
 tests/e2e/reports
 selenium-debug.log
 
+day01/demos/test.html
+day02/demos/1.js
+
 # Editor directories and files
 .idea
 .vscode
@@ -21,4 +24,3 @@ selenium-debug.log
 
 package-lock.json
 yarn.lock
-day01/demos/test.html
