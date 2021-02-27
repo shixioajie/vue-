@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+
+    <script>
+        let o = {
+
+        }
+
+        // 给 o 提供属性
+        o.name = "里哈哈";
+        Object.defineProperty(o, 'age', {
+            configurable: true,
+            writable: true,
+            enumerable: true,
+            value: 19,
+        })
+
+        // get 和 set 上
+        // 要响应式就表示在赋值和读取的时候，附带的要做一些事情。
+
+        let _gender;
+        Object.defineProperty(o, 'gender', {
+            configurable: true,
+            enumerable: true,
+            // writable: true, // 在设置了 get 和 set 的时候 writable 就会与其冲突，所以不能同时设置。
+            get() { // 如果使用o.gender 来访问数据，就会调用 get 方法（getter，读取器）
+                return _gender;
+            },
+            set(setValue) { // 如果 o.genfer = 'xxx',那么就会调用到 set 方法，并且设置的值会作为参数传递进来。
+                _gender = setValue;
+            }
+        })
+        //   如果同时使用 get 和 set 需要一个中间遍历存储正真的数据。
+        //   问题：这个 _gender 不能暴露在全局作用。
+        //   在 vue 中使用 defineRective(target,key,value,enumerable)
+
+
+
+    </script>
+
+</body>
+
+</html>

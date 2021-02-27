@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+
+    <script>
+
+        const data = {
+            name: "demo",
+            age: 10,
+            course: [
+                { name: "语文" },
+                { name: "数学" },
+                { name: "英语" },
+
+            ]
+        };// 递归（深度优先）和队列（广度优先）都可以。
+
+        // 简化响应式
+        function defineReactive(target, key, value, enumerable) {
+            // 函数内部就是一个局部作用域，这个 value 就只在函数内部使用的变量（闭包） 
+            if (typeof value === 'object' && value != null && !Array.isArray(value)) {
+                //  非数组的引用类型
+                reactive(value);// 递归
+            }
+            Object.defineProperty(target, key, {
+                configurable: true,
+                enumerable: !!enumerable,
+                get() {
+                    console.log(`读取 o 的${key}属性`)
+                    return value;
+                },
+                set(newValue) {
+                    console.log(`设置了 o  的${key}属性为${newValue}`)
+                    value = newValue;
+                }
+            })
+        }
+
+        // 将对象 o 响应式化
+        function reactive(o) {
+            let keys = Object.keys(o);
+            for (let i = 0; i < keys.length; i++) {
+                let key = keys[i];// 属性名
+                let value = o[key];
+
+                // 判断这个属性是不是引用类型，判断是不是数组。
+                // 如果引用类型就需要递归了。
+                // 如果不是引用类型，需要使用defineRactive 将其变成响应式的。
+                // 如果是引用类型，还是需要使用defineRactive 将其变成响应式的。
+                // 如果是数组就需要循环数组，然后将数组里面的元素进行响应式化。
+
+                if (Array.isArray(value)) {
+                    // 数组
+                    for (let j = 0; j < value.length; j++) {
+                        reactive(value[j])
+                    }
+                } else {
+                    // 对象或值类型
+                    defineReactive(o, key, value, true);
+                }
+            }
+        }
+        reactive(data);
+    </script>
+</body>
+
+</html>
