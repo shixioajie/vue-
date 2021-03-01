@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+
+    <script>
+        const data = {
+            name: "demo",
+            age: 10,
+            course: [
+                { name: "语文" },
+                { name: "数学" },
+                { name: "英语" },
+
+            ]
+        };// 递归（深度优先）和队列（广度优先）都可以。
+
+        let ARRAY_METHOD = [
+            'push',
+            'pop',
+            'shift',
+            'unshift',
+            'reverse',
+            'sort',
+            'splice',
+        ]
+        // 继承关系：arr - > Array.prorotype -> Object.prototype -> ...
+        let array_methods = Object.create(Array.prototype);
+        // 给这个对象设置拦截方法
+        ARRAY_METHOD.forEach(method => {
+            array_methods[method] = function () {
+                // 将数据进行响应式化
+                for (let i = 0; i < arguments.length; i++) {
+                    reactive(arguments[i])
+                }
+
+                // 连接调用的方法
+                let result = Array.prototype[method].apply(this, arguments);
+                return result;
+            }
+        })
+
+        // 简化响应式
+        function defineReactive(target, key, value, enumerable) {
+            // 函数内部就是一个局部作用域，这个 value 就只在函数内部使用的变量（闭包）
+            if (typeof value === 'object' && value != null && !Array.isArray(value)) {
+                //  非数组的引用类型
+                reactive(value);// 递归
+            }
+            Object.defineProperty(target, key, {
+                configurable: true,
+                enumerable: !!enumerable,
+                get() {
+                    console.log(`读取 o 的${key}属性`)
+                    return value;
+                },
+                set(newValue) {
+                    console.log(`设置了 o  的${key}属性为${newValue}`)
+                    value = newValue;
+                }
+            })
+        }
+
+        // 将对象 o 响应式化
+        function reactive(o) {
+            let keys = Object.keys(o);
+
+            for (let i = 0; i < keys.length; i++) {
+                let key = keys[i];// 属性名
+                let value = o[key];
+
+                if (Array.isArray(value)) {
+                    // 数组
+                    value.__proto__ = array_methods;//数组就响应式了
+                    for (let j = 0; j < value.length; j++) {
+                        reactive(value[j])
+                    }
+                } else {
+                    // 对象或值类型
+                    defineReactive(o, key, value, true);
+                }
+            }
+        }
+
+        reactive(data);
+    </script>
+</body>
+
+</html>

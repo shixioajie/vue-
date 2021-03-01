@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+
+
+    <script>
+
+        let ARRAY_METHOD = [
+            'push',
+            'pop',
+            'shift',
+            'unshift',
+            'reverse',
+            'sort',
+            'splice',
+        ]
+
+        // 思路，原型式继承：修改原型链的结构。
+
+
+        let arr = [];
+        // 继承关系：arr - > Array.prorotype -> Object.prototype -> ... 
+
+        let array_methods = Object.create(Array.prototype);
+
+        ARRAY_METHOD.forEach(method => {
+            array_methods[method] = function () {
+                // 调用原来的方法
+                console.log("调用的是拦截的" + method + "方法。");
+                let result = Array.prototype[method].apply(this, arguments);
+                console.log(this);
+                return result;
+            }
+        })
+
+        console.log(array_methods);
+
+        arr.__proto__ = array_methods;
+        // array_methods是一个 __proto__ 指向Array的对象，这里将arr的原型指向了array_methods{push...};
+
+
+        // Vue 源码中也做了判断
+        // 如果 浏览器支持 __proto__ 那么Vue就会直接这么做，如果不 Vue 会使用混入法（挂载到当前对象上）。
+   
+
+    </script>
+</body>
+
+</html>
