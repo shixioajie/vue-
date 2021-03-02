@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <div id="root">
+        <div class="box" inform='I am A box'>
+            <div title='box1'>
+                <div title='box1.1'>{{name}}</div>
+                <div title='box1.2'>{{age}}</div>
+                <div title='box1.3'>{{gender}}</div>
+
+            </div>
+            <ul>
+                <li>{{likeEat.0}}</li>
+                <li>{{likeEat.1}}</li>
+                <li>{{likeEat.2}}</li>
+
+            </ul>
+        </div>
+    </div>
+
+    <script>
+
+        // 虚拟 DOM 构造函数
+        class VNode {
+            constructor(tag, data, value, type) {
+                this.tag = tag && tag.toLowerCase();
+                this.data = data;
+                this.value = value;
+                this.type = type;
+                this.children = [];
+            }
+            appendChild(vnode) {
+                this.children.push(vnode);
+            }
+        }
+
+        // 由 HTML DOM 转换成虚拟 DOM 
+        function getVNode(node) {
+            let nodeType = node.nodeType;
+            let _vnode = null;
+
+            if (nodeType === 1) {
+                // 元素
+                let nodeName = node.nodeName;
+                let attrs = node.attributes;
+                let _attrObj = {};
+                for (let i = 0; i < attrs.length; i++) {// attrs[i] 属性节点（nodeType == 2 ）
+                    _attrObj[attrs[i].nodeName] = attrs[i].nodeValue;
+                }
+                _vnode = new VNode(nodeName, _attrObj, undefined, nodeType);
+
+                // 考虑 node 的子元素
+                let childNodes = node.childNodes;
+                for (let i = 0; i < childNodes.length; i++) {
+                    _vnode.appendChild(getVNode(childNodes[i]));
+                }
+
+            } else if (nodeType === 3) {
+                _vnode = new VNode(undefined, undefined, node.nodeValue, nodeType);
+            }
+            return _vnode;
+        }
+
+        // 转化成真实DOM
+        function parseVNode(vnode) {
+            // 创建真实的DOM
+            let type = vnode.type;
+            let _node = null;
+            if (type == 3) {
+                return document.createTextNode(vnode.value); // 创建文本节点
+            } else if (type === 1) {
+                _node = document.createElement(vnode.tag); // 创建元素
+                // 属性
+                let data = vnode.data;// data 是键值对
+                Object.keys(data).forEach(key => {
+                    let attrName = key;
+                    let attrValue = data[key];
+                    _node.setAttribute(attrName, attrValue);
+                })
+                // 处理子元素
+                let children = vnode.children;
+                children.forEach(subVnode => {
+                    _node.appendChild(parseVNode(subVnode));
+                })
+                return _node;
+            }
+        }
+
+
+        let rkuohao = /\{\{(.+?)\}\}/g;
+        // 根据路径获取对象成员数据
+        function getValueByPath(object, path) {
+            let paths = path.split('.');
+            let result = object;
+            let prop;
+            while (prop = paths.shift()) {
+                result = result[prop];
+            }
+            return result;
+        }
+
+        // 将未填数据的 Vnode 与 数据 data 结合，得到填写了数据的 Vnode：模拟 AST -> Vnode
+        function combine(vnode, data) {
+            let _type = vnode.type;
+            let _data = vnode.data;
+            let _value = vnode.value;
+            let _tag = vnode.tag;
+            let _children = vnode.children;
+            let _vnode = null;
+
+            if (_type === 3) { // 文本节点
+                // 对文本进行处理
+                _value = _value.replace(rkuohao, function (_, g) {
+                    return getValueByPath(data, g.trim());
+                })
+                _vnode = new VNode(_tag, _data, _value, _type);
+            } else if (_type === 1) { // 元素节点
+                _vnode = new VNode(_tag, _data, _value, _type);
+                _children.forEach(_subvnode => _vnode.appendChild(combine(_subvnode, data)));
+            }
+            return _vnode;
+        }
+
+        function JGVue(options) {
+            this._data = options.data;
+            this.elm = document.querySelector(options.el);// vue 是字符串，这里是 DOM 。
+            this._template = this.elm;
+            this._patent = this.elm.parentNode;
+
+            this.initData(); // 将打他进行响应式转换，进行代理。
+            this.mount(); // 挂载
+        }
+
+        JGVue.prototype.mount = function () {
+            // 需要提供一个 render 方法：生成虚拟DOM
+            this.render = this.createRenderFn(); // 带有缓存 （Vue 本身可以带有 render成员 ）
+            this.mountComponent();
+        }
+
+        JGVue.prototype.mountComponent = function () {
+            // 执行 mountComponent() 函数
+            let mount = () => {
+                this.update(this.render())
+            }
+            mount.call(this);// 本质应该交给 watcher 来调用。
+        }
+
+        JGVue.prototype.createRenderFn = function () {
+            let ast = getVNode(this._template);
+            return function render() {
+                let _tmp = combine(ast, this._data);
+                return _tmp;
+            }
+        }
+
+        JGVue.prototype.update = function (vnode) {
+            let realDOM = parseVNode(vnode);
+            this._patent.replaceChild(realDOM, document.querySelector("#root"));
+        }
+
+        JGVue.prototype.initData = function () {
+            //   遍历 this._data 的成员，将属性转换为响应式（上），将直接属性，代理到实例上。
+            let keys = Object.keys(this._data);
+            // 响应式化
+            for (let i = 0; i < keys.length; i++) {
+                // 这里将对象 this._data[keys[i]] 变成响应式的
+                reactive(this._data, this);
+            }
+            // 代理
+            for (let i = 0; i < keys.length; i++) {
+                proxy(this, '_data', keys[i]);
+            }
+        }
+
+
+        // 将某一个对象的属性访问，映射到对象的某一个属性成员上 。
+        function proxy(target, prop, key) {
+            Object.defineProperty(target, key, {
+                enumerable: true,
+                configurable: true,
+                get() {
+                    return target[prop][key];
+                },
+                set(newValue) {
+                    target[prop][key] = newValue;
+                }
+            })
+        }
+
+        // 响应式化的部分
+        let ARRAY_METHOD = [
+            'push',
+            'pop',
+            'shift',
+            'unshift',
+            'reverse',
+            'sort',
+            'splice',
+        ]
+        // 继承关系：arr - > Array.prorotype -> Object.prototype -> ...
+        let array_methods = Object.create(Array.prototype);
+        // 给这个对象设置拦截方法
+        ARRAY_METHOD.forEach(method => {
+            array_methods[method] = function () {
+                // 将数据进行响应式化
+                for (let i = 0; i < arguments.length; i++) {
+                    reactive(arguments[i])
+                }
+
+                // 连接调用的方法
+                let result = Array.prototype[method].apply(this, arguments);
+                return result;
+            }
+        })
+
+        // 简化响应式
+        function defineReactive(target, key, value, enumerable) {
+
+            let that = this;
+            // 函数内部就是一个局部作用域，这个 value 就只在函数内部使用的变量（闭包）
+            if (typeof value === 'object' && value != null && !Array.isArray(value)) {
+                //  非数组的引用类型
+                reactive(value);// 递归
+            }
+            Object.defineProperty(target, key, {
+                configurable: true,
+                enumerable: !!enumerable,
+                get() {
+                    console.log(`读取 o 的${key}属性`)
+                    return value;
+                },
+                set(newValue) {
+                    console.log(`设置了 o  的${key}属性为${newValue}`)
+                    // 临时的处理办法
+                    if (typeof newValue == 'object' && newValue != null) {
+                        value = reactive(newValue);
+                    } else {
+                        value = newValue;
+                    }
+
+                    // 模板刷新
+                    that.mountComponent();
+                }
+            })
+        }
+
+        // 将对象 o 响应式化
+        function reactive(o, vm) {
+            let keys = Object.keys(o);
+
+            for (let i = 0; i < keys.length; i++) {
+                let key = keys[i];// 属性名
+                let value = o[key];
+
+                if (Array.isArray(value)) {
+                    // 数组
+                    value.__proto__ = array_methods;//数组就响应式了
+                    for (let j = 0; j < value.length; j++) {
+                        reactive(value[j], vm)
+                    }
+                } else {
+                    // 对象或值类型
+                    defineReactive.call(vm, o, key, value, true);
+                }
+                // 在这里添加代理（问题：在这里写的代码是会递归的）
+                // 如果在这里将属性映射到 Vue 实例上，那么就表示Vue 实例可以使用属性 key 。
+            }
+        }
+
+        // 取代原来 的 reactive 方法，将对象转换为响应式的
+        function observer(obj, propName, vm) {// 将这个对象转换为响应式
+            // 1. 在这里调用 defineReactive 方法
+            // 2. 在这里查看对象的成员，递归。
+            let keys = Object.keys(obj);
+
+            for (let i = 0; i < keys.length; i++) {
+                let key = keys[i];
+                if (Array.isArray(obj[key])) {
+                    // 遍历成员
+                    for (let j = 0; j < obj[key].length; j++) {
+                        // 将obj[key][j] 变成响应式。
+                        observer(obj[key][j], vm);
+                    }
+                } else {
+                    // 递归：将 obj[key] 变成响应式的
+                    observer(obj[key], vm);
+                }
+            }
+        }
+
+        let app = new JGVue({
+            el: "#root",
+            data: {
+                name: "张哈哈",
+                age: "19",
+                gender: "男",
+                likeEat: {
+                    '0': '蛋挞',
+                    '1': '奶酪',
+                    '2': '牛奶',
+                },
+                data: [
+                    { name: "腰果" },
+                    { name: "蔓越莓干" },
+                    { name: "南瓜子仁" },
+                    { name: "红提干" },
+                ]
+            }
+        })
+
+    </script>
+</body>
+
+</html>

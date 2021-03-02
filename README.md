@@ -192,6 +192,51 @@ let o ={
 
 # 发布订阅模式
 
+- 解决重新赋值数据就不再是响应式的问题。
+- 代理方法 (app.name,app._data.name)
+- 事件模型 (node:event 模块)
+- vue 中 Observer 与 watcher 和 Dep
+
+代理方法，就是要将 app._data 中的成员 给映射到app上
+
+由于需要在更新数据的时候，更新页面的内容
+所以 app._data 访问的成员 与 app 访问的成员应该是同一成员。
+
+由于 app._data 已经是响应式的对象了，所以只需要让app访问的成员去访问 app._data 的对应成员就可以了。
+
+列如：
+```js
+app.name 转换为 app._data.name
+app.xxx 转换为 app._data.xxx
+```
+
+引入了一个函数 proxy(target,src,prop),将 target 的操作 映射到 src.prop 上这里是因为当时没有 `Proxy` 语法 (ES6)
+
+之前处理的 reactive 方法已经不行了，我们需要一个新的方法。
+
+提供一个 Observer 方法（Vue 中就有这个方法，观察者。），在方法中对属性进行处理
+可以将这个方法封装到 initData 方法中。
+
+
+
+## 解释 proxy
+
+```js
+app._data.name
+// vue 设计，不希望访问 _ 开头的数据
+// vue 中的潜在规则：
+// - _ 开头的的数据是私有数据
+// - $ 开头的是只读数据
+app.name
+// 将 对 _data.xxx 的访问交给了实例
+// 重点：访问 app 的 xxx 就是在访问 app._data.xxx
+Object.defineProperty(o2,'name',{
+    get(){
+        return o1.name;
+    }
+})
+
+```
 
 
 
