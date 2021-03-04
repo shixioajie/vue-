@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <div id="root">
+        <div class="box" inform='I am A box'>
+            <div title='box1'>
+                <div title='box1.1'>{{name}}</div>
+                <div title='box1.2'>{{age}}</div>
+                <div title='box1.3'>{{gender}}</div>
+
+            </div>
+            <ul>
+                <li>{{likeEat.0}}</li>
+                <li>{{likeEat.1}}</li>
+                <li>{{likeEat.2}}</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="./src/vnode.js"></script>
+    <script src="./src/compiler.js"></script>
+    <script src="./src/jgvue.js"></script>
+    <script src="./src/initrender.js"></script>
+    <script src="./src/initdata.js"></script>
+
+    <script>
+        let app = new JGVue({
+            el: "#root",
+            data: {
+                name: "张哈哈",
+                age: "19",
+                gender: "男",
+                likeEat: {
+                    '0': '蛋挞',
+                    '1': '奶酪',
+                    '2': '牛奶',
+                },
+                data: [
+                    { name: "腰果" },
+                    { name: "蔓越莓干" },
+                    { name: "南瓜子仁" },
+                    { name: "红提干" },
+                ]
+            }
+        })
+    </script>
+</body>
+
+</html>

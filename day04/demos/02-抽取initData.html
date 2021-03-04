@@ -134,7 +134,7 @@
             this._data = options.data;
             this.elm = document.querySelector(options.el);// vue 是字符串，这里是 DOM 。
             this._template = this.elm;
-            this._patent = this.elm.parentNode;
+            this._parent = this.elm.parentNode;
 
             this.initData(); // 将打他进行响应式转换，进行代理。
             this.mount(); // 挂载
@@ -164,7 +164,7 @@
 
         JGVue.prototype.update = function (vnode) {
             let realDOM = parseVNode(vnode);
-            this._patent.replaceChild(realDOM, document.querySelector("#root"));
+            this._parent.replaceChild(realDOM, document.querySelector("#root"));
         }
 
         JGVue.prototype.initData = function () {
@@ -217,6 +217,7 @@
                 }
 
                 // 连接调用的方法
+                console.log(this)
                 let result = Array.prototype[method].apply(this, arguments);
                 return result;
             }
