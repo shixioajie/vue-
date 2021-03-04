@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <script>
+        // 全局的 event 对象，提供 on off emit 方法。
+        var event = (function () {
+            eventObjects = {};// 暂时先将这个对象为全局；
+            return {
+                // 注册事件，可以连续注册，可以注册多个事件。
+                on: function (type, handler) {
+                    (eventObjects[type] || (eventObjects[type] = [])).push(handler);
+                },
+
+                // 移除事件。
+                // - 如果没有参数，移除所有事件。
+                // - 如果只带有事件名参数，就移除这个事件名下的所有事件。
+                // - 如果带有两个参数，那么就是表示移除某一个事件的具体处理函数
+                off: function (type, handler) {
+                    if (arguments.length === 0) {  // 没有参数就移除所有事件。
+                        eventObjects = {};
+                    } else if (arguments.length === 1) { // 只有事件的类型，移除改事件的所有处理函数
+                        eventObjects[type] = [];
+                    } else if (arguments.length === 2) {
+                        // 移除对应的 type 事件，handler 处理函数，使用循环移除所有的 ‘目标函数’ 对应的 type 事件。
+                        let _events = eventObjects[type];
+                        if (!_events) return;
+                        // 倒着循环数组的序号不会受到影响
+                        for (let i = _events.length - 1; i >= 0; i--) {
+                            if (_events[i] === handler) {
+                                _events.splice(i, 1);
+                            }
+                        }
+                    }
+                },
+
+                // 发射事件，触发事件，包装参数，传递给事件处理函数。
+                emit: function (type) {
+                    // arguments是近似数组的伪数组,借用Array上的slice方法截取出 we 需要的数据项出来。
+                    let arg = Array.prototype.slice.call(arguments, 1);
+                    let _events = eventObjects[type];
+                    if (!_events) return;
+                    for (let i = 0; i < _events.length; i++) {
+                        // 提示如果要绑定上下文就需要使用 call 或者 apply
+                        _events[i].apply(null, arg);
+                    }
+                }
+            }
+        }());
+        console.log(event);
+    </script>
+
+
+    <script>
+        // 注册事件
+        event.on('click', () => console.log("第一个 click 事件"));
+        event.on('click', () => console.log("第2个 click 事件"));
+        event.on('click', () => console.log("第3个 click 事件"));
+        event.on('click', () => console.log("第4个 click 事件"));
+        event.on('click', () => console.log("第5个 click 事件"));
+        event.on('click', () => console.log("第6个 click 事件"));
+
+        function f(eventName) {
+            event.emit(eventName)
+        }
+        // js 中 基本类型比较值。
+        // 引用类型是比较地址
+        // 引用类型与基本类型，是将其转换为 基本类型在比较，如果是 === 严格比较是不转换比较。
+
+    </script>
+</body>
+
+</html>
